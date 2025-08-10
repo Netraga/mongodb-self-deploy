@@ -1,0 +1,74 @@
+# Security - NEVER commit these files
+*.env
+.env.*
+env/
+credentials.md
+**/credentials.md
+secrets/
+*.key
+*.pem
+*.crt
+*.csr
+mongodb-keyfile
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+backup-*.tar.gz
+mongodb_backup_*
+
+# Logs
+*.log
+logs/
+mongodb-logs/
+performance-reports/
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Temporary files
+temp/
+tmp/
+.cache/
+
+# MongoDB specific
+mongod.lock
+journal/
+diagnostic.data/
+*.wt
+
+# Configuration overrides with secrets
+mongod-local.conf
+mongod-production-actual.conf
+*-with-credentials.*
+
+# Scripts with actual credentials
+scripts/*-local.sh
+scripts/*-production.sh
+
+# SSL certificates (except examples)
+ssl/
+certs/
+!ssl-example/
+
+# Monitoring credentials
+monitoring-credentials/
+zabbix-credentials.conf
+grafana-credentials.json
+
+# User data
+users/actual-credentials/
+users/production-users/
+
+# DO NOT REMOVE THIS FILE FROM GIT
+# This file itself should be committed to ensure security

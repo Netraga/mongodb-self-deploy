@@ -1,0 +1,39 @@
+# MongoDB log rotation configuration
+# Place this file in /etc/logrotate.d/mongodb
+
+/var/log/mongodb/*.log {
+    # Rotate logs daily
+    daily
+    
+    # Keep 14 days of logs
+    rotate 14
+    
+    # Compress rotated logs
+    compress
+    delaycompress
+    
+    # Don't rotate if empty
+    notifempty
+    
+    # Create new log files with these permissions
+    create 0600 mongodb mongodb
+    
+    # Use date as extension
+    dateext
+    dateformat -%Y%m%d
+    
+    # Minimum size before rotation (optional)
+    minsize 100M
+    
+    # Maximum size to force rotation
+    maxsize 1G
+    
+    # Shared scripts for multiple logs
+    sharedscripts
+    
+    # Post-rotation script
+    postrotate
+        # Signal MongoDB to reopen log files
+        /bin/kill -SIGUSR1 $(cat /var/run/mongodb/mongod.pid 2>/dev/null) 2>/dev/null || true
+    endscript
+}

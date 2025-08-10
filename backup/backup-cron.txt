@@ -1,0 +1,11 @@
+# MongoDB Backup Cron Schedule
+# Add these lines to your crontab (crontab -e)
+
+# Daily backup at 2:00 AM
+0 2 * * * /path/to/mongodb-setup/backup/mongodb-backup.sh >> /var/log/mongodb-backup.log 2>&1
+
+# Weekly full backup on Sunday at 3:00 AM
+0 3 * * 0 /path/to/mongodb-setup/backup/mongodb-backup.sh >> /var/log/mongodb-backup-weekly.log 2>&1
+
+# Optional: Backup before maintenance window (adjust time as needed)
+# 0 22 * * 5 /path/to/mongodb-setup/backup/mongodb-backup.sh >> /var/log/mongodb-backup-maintenance.log 2>&1
