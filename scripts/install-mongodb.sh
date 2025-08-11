@@ -66,6 +66,12 @@ echo "mongodb-mongosh hold" | dpkg --set-selections
 echo "mongodb-org-mongos hold" | dpkg --set-selections
 echo "mongodb-org-tools hold" | dpkg --set-selections
 
+# Create MongoDB user if it doesn't exist
+print_status "Creating MongoDB user..."
+if ! id mongodb &>/dev/null; then
+    useradd --system --no-create-home --shell /bin/false mongodb
+fi
+
 # Create MongoDB data and log directories
 print_status "Creating MongoDB directories..."
 mkdir -p /var/lib/mongodb
@@ -75,7 +81,8 @@ chown -R mongodb:mongodb /var/log/mongodb
 
 # Copy custom configuration file
 print_status "Copying MongoDB configuration..."
-cp ../configs/mongod.conf /etc/mongod.conf
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cp "$SCRIPT_DIR/configs/mongod.conf" /etc/mongod.conf
 chown root:root /etc/mongod.conf
 chmod 644 /etc/mongod.conf
 
