@@ -41,8 +41,6 @@ cat > /etc/mongod.conf << 'EOF'
 # Where and how to store data
 storage:
   dbPath: /var/lib/mongodb
-  journal:
-    enabled: true
   engine: wiredTiger
   wiredTiger:
     engineConfig:
@@ -65,14 +63,13 @@ systemLog:
 # Network interfaces
 net:
   port: 27017
-  bindIp: 127.0.0.1,YOUR_DOMAIN.example.com
+  bindIp: 127.0.0.1
   maxIncomingConnections: 65536
   
 # Process management
 processManagement:
   timeZoneInfo: /usr/share/zoneinfo
   fork: true
-  pidFilePath: /var/run/mongodb/mongod.pid
 
 # Security - ENABLED
 security:
@@ -122,7 +119,7 @@ print_status "Security configuration completed!"
 print_status "MongoDB is now running with authentication enabled."
 print_warning "From now on, you must authenticate to access MongoDB."
 print_status "Connection example:"
-print_status "  mongosh -u adminUser -p 'Admin#MongoDB2025!Secure' --authenticationDatabase admin"
+print_status "  mongosh -u adminUser -p '<password-from-.env>' --authenticationDatabase admin"
 print_status ""
 print_status "For application connections:"
-print_status "  mongodb://username:password@mdb.shivrajsinghchouhan.co.in:27017/database?authSource=admin"
+print_status "  mongodb://username:password@YOUR_DOMAIN:27017/database?authSource=admin"
