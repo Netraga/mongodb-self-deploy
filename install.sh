@@ -33,6 +33,7 @@ SETUP_SSL=false
 SETUP_MONITORING=false
 ENABLE_FIREWALL=true
 CREATE_BACKUPS=true
+DEBUG_MODE=false
 
 # Parse command line arguments
 for arg in "$@"; do
@@ -59,6 +60,11 @@ for arg in "$@"; do
             ;;
         --no-backup)
             CREATE_BACKUPS=false
+            shift
+            ;;
+        --debug)
+            DEBUG_MODE=true
+            set -x
             shift
             ;;
         --help|-h)
@@ -125,27 +131,30 @@ print_step() {
     local message="$1"
     local percentage=$((CURRENT_STEP * 100 / TOTAL_STEPS))
     echo -e "${BLUE}[${CURRENT_STEP}/${TOTAL_STEPS}]${NC} ${GREEN}$message${NC} (${percentage}%)"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Step $CURRENT_STEP: $message" >> "$INSTALL_LOG"
+    {
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Step $CURRENT_STEP: $message"
+        echo "Progress: ${percentage}%"
+    } >> "$INSTALL_LOG" 2>/dev/null || true
 }
 
 print_status() {
     echo -e "${CYAN}[INFO]${NC} $1"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - INFO: $1" >> "$INSTALL_LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - INFO: $1" >> "$INSTALL_LOG" 2>/dev/null || true
 }
 
 print_warning() {
     echo -e "${YELLOW}[WARN]${NC} $1"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - WARN: $1" >> "$INSTALL_LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - WARN: $1" >> "$INSTALL_LOG" 2>/dev/null || true
 }
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: $1" >> "$INSTALL_LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: $1" >> "$INSTALL_LOG" 2>/dev/null || true
 }
 
 print_success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - SUCCESS: $1" >> "$INSTALL_LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - SUCCESS: $1" >> "$INSTALL_LOG" 2>/dev/null || true
 }
 
 cleanup_on_error() {
@@ -191,16 +200,28 @@ setup_logging() {
     mkdir -p "$LOG_DIR"
     chmod 750 "$LOG_DIR"
     
-    # Start logging
-    exec 1> >(tee -a "$INSTALL_LOG")
-    exec 2> >(tee -a "$INSTALL_LOG" >&2)
-    
     print_status "Installation log: $INSTALL_LOG"
+    
+    # Start logging (simplified to avoid hanging)
+    {
+        echo "MongoDB Installation Started: $(date)"
+        echo "Version: $VERSION"
+        echo "System: $(uname -a)"
+        echo "User: $(whoami)"
+        echo "Arguments: $*"
+        echo "============================================"
+    } >> "$INSTALL_LOG"
 }
 
 interactive_setup() {
     if [ "$UNATTENDED" = true ]; then
         print_status "Running in unattended mode with default settings"
+        # Set defaults for unattended mode
+        if [ -z "$DOMAIN" ]; then
+            DOMAIN=$(hostname -f 2>/dev/null || hostname 2>/dev/null || echo "localhost")
+        fi
+        print_status "Domain set to: $DOMAIN"
+        print_status "SSL: $SETUP_SSL, Monitoring: $SETUP_MONITORING, Firewall: $ENABLE_FIREWALL, Backups: $CREATE_BACKUPS"
         return
     fi
     
@@ -571,12 +592,25 @@ main() {
     # Setup logging first
     setup_logging
     
-    # Installation steps
+    print_status "Starting installation process..."
+    
+    # Installation steps with error handling
+    print_status "Step 1/12: System check..."
     check_system                    # Step 1
+    
+    print_status "Step 2/12: Configuration setup..."
     interactive_setup              # Step 2
+    
+    print_status "Step 3/12: Installing dependencies..."
     install_dependencies           # Step 3
-    generate_environment          # Step 4 (replaces old step numbering)
+    
+    print_status "Step 4/12: Generating environment..."
+    generate_environment          # Step 4
+    
+    print_status "Running main installation steps..."
     run_installation_steps        # Steps 5-12
+    
+    print_status "Setting up monitoring..."
     setup_monitoring_components   # Additional monitoring setup
     
     # Save installation metadata
