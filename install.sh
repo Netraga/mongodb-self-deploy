@@ -127,14 +127,11 @@ EOF
 }
 
 print_step() {
-    ((CURRENT_STEP++))
+    CURRENT_STEP=$((CURRENT_STEP + 1))
     local message="$1"
     local percentage=$((CURRENT_STEP * 100 / TOTAL_STEPS))
     echo -e "${BLUE}[${CURRENT_STEP}/${TOTAL_STEPS}]${NC} ${GREEN}$message${NC} (${percentage}%)"
-    {
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - Step $CURRENT_STEP: $message"
-        echo "Progress: ${percentage}%"
-    } >> "$INSTALL_LOG" 2>/dev/null || true
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Step $CURRENT_STEP: $message" >> "$INSTALL_LOG" 2>/dev/null || true
 }
 
 print_status() {
@@ -158,13 +155,15 @@ print_success() {
 }
 
 cleanup_on_error() {
-    print_error "Installation failed. Check log: $INSTALL_LOG"
-    print_error "Run './uninstall.sh' to clean up if needed"
+    echo -e "${RED}[ERROR]${NC} Installation failed. Check log: $INSTALL_LOG"
+    echo -e "${RED}[ERROR]${NC} Run './uninstall.sh' to clean up if needed"
     exit 1
 }
 
-# Trap errors
-trap cleanup_on_error ERR
+# Trap errors (only if not in debug mode)
+if [ "$DEBUG_MODE" != true ]; then
+    trap cleanup_on_error ERR
+fi
 
 check_system() {
     print_step "System Compatibility Check"
@@ -437,7 +436,7 @@ run_installation_steps() {
         print_step "Setting up SSL/TLS Encryption"
         ./setup-ssl.sh
     else
-        ((CURRENT_STEP++))
+        CURRENT_STEP=$((CURRENT_STEP + 1))
         print_status "Skipping SSL/TLS setup (not enabled)"
     fi
     
@@ -446,7 +445,7 @@ run_installation_steps() {
         print_step "Configuring Firewall Protection"
         ./setup-firewall.sh
     else
-        ((CURRENT_STEP++))
+        CURRENT_STEP=$((CURRENT_STEP + 1))
         print_status "Skipping firewall setup (disabled)"
     fi
     
@@ -455,7 +454,7 @@ run_installation_steps() {
         print_step "Setting up Automated Backups"
         setup_backups
     else
-        ((CURRENT_STEP++))
+        CURRENT_STEP=$((CURRENT_STEP + 1))
         print_status "Skipping backup setup (disabled)"
     fi
     
